@@ -23,4 +23,5 @@ public class CustomWebMvcConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/gen/**")
                 .addResourceLocations("file:///" + AppConfig.getGenFileDirPath() + "/");
     }
+
 }
