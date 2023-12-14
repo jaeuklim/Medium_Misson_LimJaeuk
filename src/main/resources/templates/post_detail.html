@@ -18,22 +18,22 @@
                 </div>
             </div>
             <div class="my-3">
-                <div th:switch="${#lists.contains(post.voter, siteUser)}">
-                    <div th:case="true">
-                        <form method="POST" th:action="@{|/post/${post.id}/canCellike|}" style="display: inline;">
+                <div th:if="${hasVoted != null}">
+                    <div th:if="${hasVoted}">
+                        <form method="POST" th:action="@{|/post/${post.id}/cancelLike|}" style="display: inline;">
                             <input type="hidden" name="_method" value="delete" />
                             <button type="submit" class="cancel-recommend btn btn-sm btn-outline-secondary">
                                 추천 취소
-                                <span class="badge rounded-pill bg-success" th:text="${#lists.size(post.voter)}"></span>
+                                <span class="badge rounded-pill bg-success" th:text="${#lists.size(post.voters)}"></span>
                             </button>
                         </form>
                     </div>
 
-                    <div th:case="*">
+                    <div th:if="${!hasVoted}">
                         <form method="POST" th:action="@{|/post/${post.id}/like|}" style="display: inline;">
                             <button type="submit" class="recommend btn btn-sm btn-outline-secondary">
                                 추천
-                                <span class="badge rounded-pill bg-success" th:text="${#lists.size(post.voter)}"></span>
+                                <span class="badge rounded-pill bg-success" th:text="${#lists.size(post.voters)}"></span>
                             </button>
                         </form>
                     </div>
@@ -55,10 +55,10 @@
             </div>
         </div>
     </div>
-    <!-- 답변의 갯수 표시 -->
+    <!-- 댓글의 갯수 표시 -->
     <h5 class="border-bottom my-3 py-2"
         th:text="|${#lists.size(post.commentList)}개의 댓글이 있습니다.|"></h5>
-    <!-- 답변 반복 시작 -->
+    <!-- 댓글 반복 시작 -->
     <div class="card my-3" th:each="comment : ${post.commentList}">
         <div class="card-body">
             <div class="card-text" style="white-space: pre-line;" th:text="${comment.content}"></div>
@@ -95,7 +95,7 @@
     </div>
     <!-- 답변 반복 끝  -->
     <!-- 답변 작성 -->
-    <form th:action="@{|/comment/create/${post.id}|}" th:object="${commentForm}" method="post" class="my-3">
+    <form th:action="@{|/comment/write/${post.id}|}" th:object="${commentForm}" method="post" class="my-3">
         <div class="alert alert-danger" role="alert" th:if="${#fields.hasAnyErrors()}">
             <div th:each="err : ${#fields.allErrors()}" th:text="${err}" />
         </div>

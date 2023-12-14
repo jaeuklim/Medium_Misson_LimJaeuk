@@ -1,8 +1,12 @@
 package com.ll.medium.domain.user;
 
+import com.ll.medium.domain.post.Post;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -17,4 +21,12 @@ public class SiteUser {
     private String username;
 
     private String password;
+
+    @ManyToMany
+    @JoinTable(
+            name = "vote",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "post_id")
+    )
+    private Set<Post> votedPosts = new HashSet<>();
 }

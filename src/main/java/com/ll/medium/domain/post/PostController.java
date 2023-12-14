@@ -26,9 +26,10 @@ public class PostController {
     private final UserService userService;
 
     @GetMapping("/list")
-    public String list(Model model, @RequestParam(value="page", defaultValue="0") int page) {
-        Page<Post> paging = this.postService.getList(page);
+    public String list(Model model, @RequestParam(value="page", defaultValue="0") int page, @RequestParam(value = "kw", defaultValue = "") String kw) {
+        Page<Post> paging = this.postService.getList(page, kw);
         model.addAttribute("paging", paging);
+        model.addAttribute("kw", kw);
         return "post_list";
     }
 
@@ -36,6 +37,7 @@ public class PostController {
     public String detail(Model model, @PathVariable("id") Integer id, CommentForm commentForm) {
         Post post = this.postService.getPost(id);
         postService.increaseViewCount(post);
+
         model.addAttribute("post", post);
         return "post_detail";
     }
@@ -98,19 +100,22 @@ public class PostController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/{id}/like")
-    public String postVote(Principal principal, @PathVariable("id") Integer id) {
+    public String postVote(Model model, Principal principal, @PathVariable("id") Integer id) {
         Post post = this.postService.getPost(id);
         SiteUser siteUser = this.userService.getUser(principal.getName());
-        this.postService.vote(post, siteUser);
+        boolean hasVoted = this.postService.hasVoted(post, siteUser);
+        model.addAttribute("hasVoted", hasVoted);
+
         return String.format("redirect:/post/%s", id);
     }
 
     @PreAuthorize("isAuthenticated()")
-    @DeleteMapping("/{id}/canCellike")
-    public String cancelVote(Principal principal, @PathVariable("id") Integer id) {
+    @DeleteMapping("/{id}/cancelLike")
+    public String cancelVote(Model model, Principal principal, @PathVariable("id") Integer id) {
         Post post = this.postService.getPost(id);
         SiteUser siteUser = this.userService.getUser(principal.getName());
-        this.postService.canCellike(post, siteUser);
+        boolean hasVoted = this.postService.canCellike(post, siteUser);
+        model.addAttribute("hasVoted", hasVoted);
         return String.format("redirect:/post/%s", id);
     }
 

@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -24,6 +25,8 @@ public class Post {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+//    private boolean isPublished;
+
     private LocalDateTime createDate;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE)
@@ -34,8 +37,8 @@ public class Post {
 
     private LocalDateTime modifyDate;
 
-    @ManyToMany
-    Set<SiteUser> voter;
+    @ManyToMany(mappedBy = "votedPosts")
+    private Set<SiteUser> voters = new HashSet<>();
 
     private int viewCount;
 }
