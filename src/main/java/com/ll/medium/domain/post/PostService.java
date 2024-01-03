@@ -3,6 +3,7 @@ package com.ll.medium.domain.post;
 import com.ll.medium.domain.DataNotFoundException;
 import com.ll.medium.domain.comment.Comment;
 import com.ll.medium.domain.user.SiteUser;
+import com.ll.medium.domain.user.UserService;
 import jakarta.persistence.criteria.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,11 +18,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
 public class PostService {
 
+    private final UserService userService;
     private final PostRepository postRepository;
 
     private Specification<Post> search(String kw) {
@@ -47,6 +50,7 @@ public class PostService {
         sorts.add(Sort.Order.desc("createDate"));
         Pageable pageable = PageRequest.of(page, 30, Sort.by(sorts));
         Specification<Post> spec = search(kw);
+        spec = Specification.where(spec).and(isPublished());
         return this.postRepository.findAll(spec, pageable);
     }
 
@@ -59,19 +63,20 @@ public class PostService {
         }
     }
 
-    public void create(String subject, String content, SiteUser user) {
+    public void create(String subject, String content, boolean isPublished, SiteUser user) {
         Post q = new Post();
         q.setSubject(subject);
         q.setContent(content);
-//        q.setPublished(isPublished);
+        q.setPublished(isPublished);
         q.setCreateDate(LocalDateTime.now());
         q.setAuthor(user);
         this.postRepository.save(q);
     }
 
-    public void modify(Post post, String subject, String content) {
+    public void modify(Post post, String subject, String content, Boolean isPublished) {
         post.setSubject(subject);
         post.setContent(content);
+        post.setPublished(isPublished);
         post.setModifyDate(LocalDateTime.now());
         this.postRepository.save(post);
     }
@@ -84,6 +89,11 @@ public class PostService {
         post.getVoters().add(user);
         this.postRepository.save(post);
         return user.getVotedPosts().contains(post);
+    }
+
+    public boolean isVotedUser(String username, Set<SiteUser> voters) {
+        SiteUser findUser = userService.getUser(username);
+        return voters.contains(findUser);
     }
 
 //    public void vote(Post post, SiteUser siteUser) {
@@ -108,6 +118,10 @@ public class PostService {
     public Page<Post> getListByAuthor(SiteUser author, int page) {
         // author가 작성한 글만을 가져옵니다.
         return postRepository.findByAuthor(author, PageRequest.of(page, 10));
+    }
+
+    private Specification<Post> isPublished() {
+        return (root, query, cb) -> cb.isTrue(root.get("isPublished"));
     }
 }
 
