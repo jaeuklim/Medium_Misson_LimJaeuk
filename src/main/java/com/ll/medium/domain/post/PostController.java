@@ -5,6 +5,7 @@ import com.ll.medium.domain.user.SiteUser;
 import com.ll.medium.domain.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PostAuthorize;
@@ -17,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 
+@Slf4j
 @RequestMapping("/post")
 @RequiredArgsConstructor
 @Controller
@@ -34,11 +36,21 @@ public class PostController {
     }
 
     @GetMapping(value = "/{id}")
-    public String detail(Model model, @PathVariable("id") Integer id, CommentForm commentForm) {
+    public String detail(Model model, @PathVariable("id") Integer id, CommentForm commentForm, Principal principal) {
         Post post = this.postService.getPost(id);
         postService.increaseViewCount(post);
 
+        boolean isVoted = false;
+
+        if ( principal != null ) {
+            isVoted = postService.isVotedUser(principal.getName(), post.getVoters());
+        }
+
+        log.info("isVoted = {}", isVoted);
+
         model.addAttribute("post", post);
+        model.addAttribute("isVoted", isVoted);
+
         return "post_detail";
     }
 
@@ -55,8 +67,9 @@ public class PostController {
             return "post_form";
         }
         SiteUser siteUser = this.userService.getUser(principal.getName());
-        this.postService.create(postForm.getSubject(), postForm.getContent(), siteUser);
+        this.postService.create(postForm.getSubject(), postForm.getContent(), postForm.getIsPublished(), siteUser);
         return "redirect:/post/list";
+
     }
 
     @PreAuthorize("isAuthenticated()")
@@ -68,6 +81,7 @@ public class PostController {
         }
         postForm.setSubject(post.getSubject());
         postForm.setContent(post.getContent());
+        postForm.setIsPublished(post.isPublished());
         return "modify_form";
     }
 
@@ -82,7 +96,7 @@ public class PostController {
         if (!post.getAuthor().getUsername().equals(principal.getName())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "수정권한이 없습니다.");
         }
-        this.postService.modify(post, postForm.getSubject(), postForm.getContent());
+        this.postService.modify(post, postForm.getSubject(), postForm.getContent(), postForm.getIsPublished());
 
         return String.format("redirect:/post/%s", id);
     }
@@ -97,6 +111,7 @@ public class PostController {
         this.postService.delete(post);
         return "redirect:/";
     }
+
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/{id}/like")

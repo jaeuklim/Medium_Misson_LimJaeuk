@@ -25,7 +25,7 @@ public class Post {
     @Column(columnDefinition = "TEXT")
     private String content;
 
-//    private boolean isPublished;
+    private boolean isPublished;
 
     private LocalDateTime createDate;
 

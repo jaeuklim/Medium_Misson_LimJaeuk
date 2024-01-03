@@ -18,8 +18,9 @@
                 </div>
             </div>
             <div class="my-3">
-                <div th:if="${hasVoted != null}">
-                    <div th:if="${hasVoted}">
+<!--             if post.voters.size() == 0 != 0   -->
+                <div th:if="${isVoted}">
+<!--                    <div th:if="${hasVoted}">-->
                         <form method="POST" th:action="@{|/post/${post.id}/cancelLike|}" style="display: inline;">
                             <input type="hidden" name="_method" value="delete" />
                             <button type="submit" class="cancel-recommend btn btn-sm btn-outline-secondary">
@@ -27,16 +28,16 @@
                                 <span class="badge rounded-pill bg-success" th:text="${#lists.size(post.voters)}"></span>
                             </button>
                         </form>
-                    </div>
+<!--                    </div>-->
+                </div>
 
-                    <div th:if="${!hasVoted}">
-                        <form method="POST" th:action="@{|/post/${post.id}/like|}" style="display: inline;">
-                            <button type="submit" class="recommend btn btn-sm btn-outline-secondary">
-                                추천
-                                <span class="badge rounded-pill bg-success" th:text="${#lists.size(post.voters)}"></span>
-                            </button>
-                        </form>
-                    </div>
+                <div th:if="${!isVoted}">
+                    <form method="POST" th:action="@{|/post/${post.id}/like|}" style="display: inline;">
+                        <button type="submit" class="recommend btn btn-sm btn-outline-secondary">
+                            추천
+                            <span class="badge rounded-pill bg-success" th:text="${#lists.size(post.voters)}"></span>
+                        </button>
+                    </form>
                 </div>
 
                 <a th:href="@{|/post/${post.id}/modify|}" class="btn btn-sm btn-outline-secondary"
