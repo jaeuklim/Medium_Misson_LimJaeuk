@@ -21,7 +21,7 @@ public class PostForm {
 
     private Boolean isPublished = true;
 
-    private Boolean isPaid;
+    private Boolean isPaid = false;
 
 }
 
