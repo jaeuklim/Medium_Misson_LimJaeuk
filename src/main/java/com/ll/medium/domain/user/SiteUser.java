@@ -54,4 +54,8 @@ public class SiteUser {
         return getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
     }
+
+    public boolean getIsPaid() {
+        return isPaid;
+    }
 }
