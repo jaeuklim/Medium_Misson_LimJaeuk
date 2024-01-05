@@ -38,6 +38,7 @@ public class NotProd {
     }
 
     @Transactional
+
     public void work1() {
         SiteUser User1 = userService.create("user1", "1234", true);
         SiteUser User2 = userService.create("user2", "1234",false);
