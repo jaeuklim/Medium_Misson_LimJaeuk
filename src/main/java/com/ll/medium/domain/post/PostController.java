@@ -159,6 +159,8 @@ public class PostController {
         return String.format("redirect:/post/%s", id);
     }
 
+
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/myList")
     public String myList(Model model, Principal principal , @RequestParam(value="page", defaultValue="0") int page) {
         SiteUser siteUser = this.userService.getUser(principal.getName());
