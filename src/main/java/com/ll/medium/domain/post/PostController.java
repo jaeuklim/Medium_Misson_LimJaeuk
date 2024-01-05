@@ -41,16 +41,34 @@ public class PostController {
         postService.increaseViewCount(post);
 
         boolean isVoted = false;
+        boolean postisPaid = post.isPaid();
+        boolean userisPaid = false;
 
         if ( principal != null ) {
             isVoted = postService.isVotedUser(principal.getName(), post.getVoters());
-        }
+            SiteUser user = userService.getUser(principal.getName()); // userService와 getUser 메소드는 직접 구현해야 합니다.
+            if (user != null) {
+                userisPaid = user.getIsPaid(); // getIsPaid 메소드는 User 엔터티에서 직접 구현해야 합니다.
+            }
 
-        log.info("isVoted = {}", isVoted);
+        }
+//        log.info("isVoted = {}", isVoted);
+        log.info("postisPaid 는 {}", postisPaid);
+        log.info("userisPaid 는 {}", userisPaid);
 
         model.addAttribute("post", post);
         model.addAttribute("isVoted", isVoted);
+        model.addAttribute("postisPaid", postisPaid);
+        model.addAttribute("userisPaid", userisPaid);
 
+        return "post_detail";
+    }
+
+    @PostMapping("/{id}")
+    public String viewPost(@PathVariable("id") Integer id, Model model) {
+        Post post = postService.getPost(id);
+        postService.increaseViewCount(post);
+        model.addAttribute("post", post);
         return "post_detail";
     }
 
@@ -67,7 +85,7 @@ public class PostController {
             return "post_form";
         }
         SiteUser siteUser = this.userService.getUser(principal.getName());
-        this.postService.create(postForm.getSubject(), postForm.getContent(), postForm.getIsPublished(), siteUser);
+        this.postService.create(postForm.getSubject(), postForm.getContent(), postForm.getIsPublished(), postForm.getIsPaid(), siteUser);
         return "redirect:/post/list";
 
     }
@@ -132,14 +150,6 @@ public class PostController {
         boolean hasVoted = this.postService.canCellike(post, siteUser);
         model.addAttribute("hasVoted", hasVoted);
         return String.format("redirect:/post/%s", id);
-    }
-
-    @PostMapping("/{id}")
-    public String viewPost(@PathVariable("id") Integer id, Model model) {
-        Post post = postService.getPost(id);
-        postService.increaseViewCount(post);
-        model.addAttribute("post", post);
-        return "post_detail";
     }
 
     @GetMapping("/myList")
