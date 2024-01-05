@@ -47,14 +47,17 @@ public class PostController {
         boolean isVoted = false;
         boolean postisPaid = post.isPaid();
         boolean userisPaid = false;
+        boolean isAuthor = false;
 
         if (authentication != null) {
             Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
             userisPaid = authorities.contains(new SimpleGrantedAuthority("ROLE_PAID"));
         }
 
-        if ( principal != null )
+        if ( principal != null ) {
             isVoted = postService.isVotedUser(principal.getName(), post.getVoters());
+            isAuthor = principal.getName().equals(post.getAuthor().getUsername()); // 게시글 작성자와 현재 사용자를 비교
+        }
 
 //        log.info("isVoted = {}", isVoted);
         log.info("postisPaid 는 {}", postisPaid);
@@ -63,7 +66,7 @@ public class PostController {
         model.addAttribute("post", post);
         model.addAttribute("isVoted", isVoted);
         model.addAttribute("postisPaid", postisPaid);
-        model.addAttribute("userisPaid", userisPaid);
+        model.addAttribute("userisPaid", userisPaid || isAuthor);
 
         return "post_detail";
     }
