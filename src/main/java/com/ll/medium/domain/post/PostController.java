@@ -10,6 +10,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
+import java.util.Collection;
 
 @Slf4j
 @RequestMapping("/post")
@@ -36,7 +40,7 @@ public class PostController {
     }
 
     @GetMapping(value = "/{id}")
-    public String detail(Model model, @PathVariable("id") Integer id, CommentForm commentForm, Principal principal) {
+    public String detail(Model model, @PathVariable("id") Integer id, CommentForm commentForm, Principal principal, Authentication authentication) {
         Post post = this.postService.getPost(id);
         postService.increaseViewCount(post);
 
@@ -44,14 +48,14 @@ public class PostController {
         boolean postisPaid = post.isPaid();
         boolean userisPaid = false;
 
-        if ( principal != null ) {
-            isVoted = postService.isVotedUser(principal.getName(), post.getVoters());
-            SiteUser user = userService.getUser(principal.getName()); // userService와 getUser 메소드는 직접 구현해야 합니다.
-            if (user != null) {
-                userisPaid = user.getIsPaid(); // getIsPaid 메소드는 User 엔터티에서 직접 구현해야 합니다.
-            }
-
+        if (authentication != null) {
+            Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+            userisPaid = authorities.contains(new SimpleGrantedAuthority("ROLE_PAID"));
         }
+
+        if ( principal != null )
+            isVoted = postService.isVotedUser(principal.getName(), post.getVoters());
+
 //        log.info("isVoted = {}", isVoted);
         log.info("postisPaid 는 {}", postisPaid);
         log.info("userisPaid 는 {}", userisPaid);
