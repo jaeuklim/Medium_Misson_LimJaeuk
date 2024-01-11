@@ -27,6 +27,8 @@ public class Post {
 
     private boolean isPublished;
 
+    private boolean isPaid;
+
     private LocalDateTime createDate;
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE)

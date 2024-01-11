@@ -63,11 +63,12 @@ public class PostService {
         }
     }
 
-    public void create(String subject, String content, boolean isPublished, SiteUser user) {
+    public void create(String subject, String content, boolean isPublished, boolean isPaid, SiteUser user) {
         Post q = new Post();
         q.setSubject(subject);
         q.setContent(content);
         q.setPublished(isPublished);
+        q.setPaid(isPaid);
         q.setCreateDate(LocalDateTime.now());
         q.setAuthor(user);
         this.postRepository.save(q);

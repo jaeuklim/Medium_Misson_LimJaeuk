@@ -10,6 +10,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
+import java.util.Collection;
 
 @Slf4j
 @RequestMapping("/post")
@@ -36,21 +40,42 @@ public class PostController {
     }
 
     @GetMapping(value = "/{id}")
-    public String detail(Model model, @PathVariable("id") Integer id, CommentForm commentForm, Principal principal) {
+    public String detail(Model model, @PathVariable("id") Integer id, CommentForm commentForm, Principal principal, Authentication authentication) {
         Post post = this.postService.getPost(id);
         postService.increaseViewCount(post);
 
         boolean isVoted = false;
+        boolean postisPaid = post.isPaid();
+        boolean userisPaid = false;
+        boolean isAuthor = false;
+
+        if (authentication != null) {
+            Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+            userisPaid = authorities.contains(new SimpleGrantedAuthority("ROLE_PAID"));
+        }
 
         if ( principal != null ) {
             isVoted = postService.isVotedUser(principal.getName(), post.getVoters());
+            isAuthor = principal.getName().equals(post.getAuthor().getUsername()); // 게시글 작성자와 현재 사용자를 비교
         }
 
-        log.info("isVoted = {}", isVoted);
+//        log.info("isVoted = {}", isVoted);
+        log.info("postisPaid 는 {}", postisPaid);
+        log.info("userisPaid 는 {}", userisPaid);
 
         model.addAttribute("post", post);
         model.addAttribute("isVoted", isVoted);
+        model.addAttribute("postisPaid", postisPaid);
+        model.addAttribute("userisPaid", userisPaid || isAuthor);
 
+        return "post_detail";
+    }
+
+    @PostMapping("/{id}")
+    public String viewPost(@PathVariable("id") Integer id, Model model) {
+        Post post = postService.getPost(id);
+        postService.increaseViewCount(post);
+        model.addAttribute("post", post);
         return "post_detail";
     }
 
@@ -67,7 +92,7 @@ public class PostController {
             return "post_form";
         }
         SiteUser siteUser = this.userService.getUser(principal.getName());
-        this.postService.create(postForm.getSubject(), postForm.getContent(), postForm.getIsPublished(), siteUser);
+        this.postService.create(postForm.getSubject(), postForm.getContent(), postForm.getIsPublished(), postForm.getIsPaid(), siteUser);
         return "redirect:/post/list";
 
     }
@@ -134,14 +159,8 @@ public class PostController {
         return String.format("redirect:/post/%s", id);
     }
 
-    @PostMapping("/{id}")
-    public String viewPost(@PathVariable("id") Integer id, Model model) {
-        Post post = postService.getPost(id);
-        postService.increaseViewCount(post);
-        model.addAttribute("post", post);
-        return "post_detail";
-    }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/myList")
     public String myList(Model model, Principal principal , @RequestParam(value="page", defaultValue="0") int page) {
         SiteUser siteUser = this.userService.getUser(principal.getName());
