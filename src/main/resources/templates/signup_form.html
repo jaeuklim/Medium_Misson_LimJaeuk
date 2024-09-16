@@ -19,6 +19,10 @@
             <label for="password2" class="form-label">비밀번호 확인</label>
             <input type="password" th:field="*{password2}" class="form-control">
         </div>
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="isPaid" th:field="*{isPaid}">
+            <label class="form-check-label" for="isPaid">유료 멤버십 가입</label>
+        </div>
 
         <button type="submit" class="btn btn-primary">회원가입</button>
     </form>
